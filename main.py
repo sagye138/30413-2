@@ -14,7 +14,7 @@ if 'alive' not in st.session_state:
     st.session_state.status_title = ""
     st.session_state.last_click_time = time.time()
     st.session_state.mom_type = None
-    st.session_state.render_id = 0  # 👈 화면 잔상 방지를 위한 렌더링 ID 추가
+    st.session_state.render_id = 0  # 👈 상태 초기화부에 render_id 추가
 
 def reset_game():
     st.session_state.alive = True
@@ -63,7 +63,7 @@ def check_idle_death():
 
 def process_action(next_stage=None, fatal=False, fatal_reason="", fatal_title="", is_ending=False, win_msg="", win_title=""):
     st.session_state.last_click_time = time.time()  
-    st.session_state.render_id += 1  # 👈 액션이 발생할 때마다 렌더링 ID를 바꿔서 잔상 원천 차단
+    st.session_state.render_id += 1  
         
     other_sudden_deaths = [
         ("사망 메시지가 맞춤법을 틀려서 주것씁이다!!", "세종대왕 극대노"),
@@ -161,7 +161,6 @@ st.markdown(f"""
 if check_idle_death():
     st.rerun()
 
-# --- 화면을 완전히 강제 리셋하기 위해 고유 key suffix(render_id) 적용 ---
 rid = st.session_state.render_id
 
 with st.container():
@@ -188,7 +187,6 @@ with st.container():
             st.rerun()
 
     else:
-        # 1. 탄생 단계
         if st.session_state.stage == 'birth':
             st.subheader("응애! 생명의 탄생")
             st.write("김탁곤드레밥이 세상에 나오려 합니다. 어떻게 하시겠습니까?")
@@ -212,7 +210,6 @@ with st.container():
             if st.button("엄마가 마음에 들지 않는다", key=f"btn_birth_2_{rid}"):
                 process_action(next_stage='mom_select')
 
-        # 엄마 고르기 단계
         elif st.session_state.stage == 'mom_select':
             st.subheader("새로운 엄마를 스카우트하러 갑니다. 누구를 고르시겠습니까?")
             
@@ -235,7 +232,6 @@ with st.container():
                 st.session_state.render_id += 1
                 st.rerun()
 
-        # 메인 메뉴
         elif st.session_state.stage == 'main':
             if st.session_state.mom_type == 'exploded':
                 st.error("💥 엄마가 선택 도중 과열되어 쾅 터져버렸습니다! **[무소속 고아 상태]**로 생성되었습니다.")
@@ -258,7 +254,6 @@ with st.container():
                 if st.button("방구석에서 잉여짓 하기", key=f"main_btn_5_{rid}"): process_action(next_stage='idle_start')
                 if st.button("PC방 가서 게임하기", key=f"main_btn_6_{rid}"): process_action(next_stage='game_start')
 
-        # 루트들
         elif st.session_state.stage == 'eat_start':
             st.subheader("밥을 먹기로 결심했습니다. 어디로 갈까요?")
             if st.button("마라탕 골목으로 간다", key=f"eat_s_1_{rid}"): process_action(next_stage='eat_walk')
@@ -365,7 +360,6 @@ with st.container():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ⏳ 가만히 있을 때의 초단위 자동 리런 틱
 if st.session_state.alive and not st.session_state.ending:
     time.sleep(1)
     st.rerun()
