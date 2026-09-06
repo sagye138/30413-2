@@ -28,6 +28,7 @@ def die(reason, title):
     st.session_state.ending = False
     st.session_state.status_message = reason
     st.session_state.status_title = title
+    st.session_state.social_credit = -6974  # 죽을 때 사회 신용 점수 고정
 
 def win(message, title):
     st.session_state.alive = True
@@ -37,22 +38,23 @@ def win(message, title):
 
 def update_credit(amount):
     st.session_state.social_credit += amount
-    # 사회 신용 점수가 0 이하가 되면 공안에게 체포되어 사망
     if st.session_state.social_credit <= 0:
         die("사회 신용 점수가 바닥나서 공안에게 끌려가 숙청당했습니다!", "사회적 말살")
 
 def process_action(next_stage=None, fatal=False, fatal_reason="", fatal_title="", is_ending=False, win_msg="", win_title="", credit_change=0):
-    if credit_change != 0:
+    if fatal:
+        die(fatal_reason, fatal_title)
+    elif credit_change != 0 and st.session_state.alive:
         update_credit(credit_change)
         if not st.session_state.alive:
             st.rerun()
             return
 
     if fatal:
-        die(fatal_reason, fatal_title)
+        pass  # 이미 die 호출됨
     elif is_ending:
         win(win_msg, win_title)
-    elif next_stage:
+    elif next_stage and st.session_state.alive:
         st.session_state.stage = next_stage
     st.rerun()
 
@@ -143,6 +145,8 @@ with st.container():
     # 생존 및 엔딩 상태가 아닐 때만 사회 신용 점수 표시
     if st.session_state.alive and not st.session_state.ending and st.session_state.stage != 'birth':
         st.markdown(f'<div class="credit-box">⭐ 현재 사회 신용 점수: {st.session_state.social_credit}점</div>', unsafe_allow_html=True)
+    elif not st.session_state.alive:
+        st.markdown(f'<div class="credit-box" style="background-color: rgba(255, 0, 0, 0.2); border-color: #ff3300;">⭐ 최종 사회 신용 점수: {st.session_state.social_credit}점</div>', unsafe_allow_html=True)
     
     st.markdown("---")
 
