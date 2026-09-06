@@ -13,6 +13,7 @@ if 'alive' not in st.session_state:
     st.session_state.status_title = ""
     st.session_state.mom_type = None
     st.session_state.social_credit = 500  # 사회 신용 점수 초기값
+    st.session_state.is_orphan = False    # 고아 여부 플래그
 
 def reset_game():
     st.session_state.alive = True
@@ -22,13 +23,14 @@ def reset_game():
     st.session_state.status_title = ""
     st.session_state.mom_type = None
     st.session_state.social_credit = 500
+    st.session_state.is_orphan = False
 
 def die(reason, title):
     st.session_state.alive = False
     st.session_state.ending = False
     st.session_state.status_message = reason
     st.session_state.status_title = title
-    st.session_state.social_credit = -6974  # 죽을 때 사회 신용 점수 고정
+    st.session_state.social_credit = -6974
 
 def win(message, title):
     st.session_state.alive = True
@@ -69,6 +71,7 @@ def get_background_url():
         'birth': "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1920&q=80",
         'mom_select': "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1920&q=80",
         'main': "https://images.unsplash.com/photo-1514395462725-fb4566210144?auto=format&fit=crop&w=1920&q=80",
+        'orphan_main': "https://images.unsplash.com/photo-1517540216132-23467643ef81?auto=format&fit=crop&w=1920&q=80",
         'eat_start': "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80",
         'eat_walk': "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80", 
         'eat_door': "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1920&q=80",
@@ -143,7 +146,8 @@ with st.container():
     st.title("김탁곤드레밥 생존기")
     
     if st.session_state.alive and not st.session_state.ending and st.session_state.stage != 'birth':
-        st.markdown(f'<div class="credit-box">⭐ 현재 사회 신용 점수: {st.session_state.social_credit}점</div>', unsafe_allow_html=True)
+        credit_label = "💀 [하드코어 고아 모드] 현재 사회 신용 점수:" if st.session_state.is_orphan else "⭐ 현재 사회 신용 점수:"
+        st.markdown(f'<div class="credit-box">{credit_label} {st.session_state.social_credit}점</div>', unsafe_allow_html=True)
     elif not st.session_state.alive:
         st.markdown(f'<div class="credit-box" style="background-color: rgba(255, 0, 0, 0.2); border-color: #ff3300;">⭐ 최종 사회 신용 점수: {st.session_state.social_credit}점</div>', unsafe_allow_html=True)
     
@@ -173,19 +177,13 @@ with st.container():
             st.write("김탁곤드레밥이 세상에 나오려 합니다. 어떻게 하시겠습니까?")
             
             if st.button("힘차게 태어나기", key="btn_birth_1"):
-                # 태어날 때 즉사 확률을 50%로 대폭 상향
+                # 50% 확률로 엄마가 터지면서 고아로 직행!
                 if random.random() < 0.50:  
-                    death_type = random.randint(1, 4)
-                    if death_type == 1:
-                        die("태어나자마자 엄마 배 속에서 자폭 버튼이 눌려 산산조각 났습니다!", "모태 폭발사고")
-                    elif death_type == 2:
-                        die("출생 신고 도중 산부인과 전체가 핵폭발처럼 날아갔습니다!", "산부인과 증발")
-                    elif death_type == 3:
-                        die("태어나자마자 공산당 체포조가 마중 나와서 유아 독존 폭살당했습니다!", "영유아 숙청")
-                    else:
-                        die("응애 하고 숨을 들이쉬는 순간 엄마가 품고 있던 사제 폭탄이 터졌습니다!", "폭탄 안고 태어나기")
+                    st.session_state.is_orphan = True
+                    st.session_state.social_credit = 200  # 신용점수 대폭 깎임
+                    st.session_state.stage = 'orphan_main'
                 else:
-                    st.session_state.mom_type = 'exploded'  # 엄마가 터지는 기믹용 타입 지정
+                    st.session_state.mom_type = 'normal'
                     st.session_state.social_credit = 500
                     st.session_state.stage = 'main'
                 st.rerun()
@@ -197,9 +195,11 @@ with st.container():
             st.subheader("새로운 엄마를 스카우트하러 갑니다. 누구를 고르시겠습니까?")
             
             def handle_mom_selection(mom_key):
-                # 엄마 고를 때도 50% 확률로 즉사 (폭발)
+                # 엄마 고를 때 50% 확률로 폭발해 고아 직행
                 if random.random() < 0.50:
-                    die("엄마를 고르는 순간 선택한 엄마가 불꽃과 함께 장렬히 산화했습니다!", "엄마 동반 자폭")
+                    st.session_state.is_orphan = True
+                    st.session_state.social_credit = 150
+                    st.session_state.stage = 'orphan_main'
                 else:
                     st.session_state.mom_type = mom_key
                     st.session_state.stage = 'main'
@@ -212,10 +212,26 @@ with st.container():
             if st.button("평범하고 인자한 시골 어머니 (시골 가스통 폭발)", key="btn_mom_choice_3"):
                 handle_mom_selection('gentle')
 
+        elif st.session_state.stage == 'orphan_main':
+            st.error("💥 [속보] 엄마가 펑 터져버려서 졸지에 길거리 한복판에 홀로 남겨진 고아가 되었습니다!")
+            st.warning("⚠️ 엄마의 보호가 없어 모든 행동의 난이도와 페널티가 2배로 증가합니다! 살아남으려면 악으로 깡으로 버텨야 합니다.")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("구걸하며 밥 얻어먹기", key="orphan_eat"): process_action(next_stage='eat_start', credit_change=5)
+                if st.button("길거리에서 대륙의 얼 표출", key="orphan_china"): process_action(next_stage='chinese_start', credit_change=15)
+                if st.button("아르바이트로 생계 꾸리기", key="orphan_job"): process_action(next_stage='job_start', credit_change=10)
+            with col2:
+                if st.button("폐지 줍기 외출", key="orphan_out"): process_action(next_stage='out_start', credit_change=-20)
+                if st.button("쪽방촌 방구석 잉여짓", key="orphan_idle"): process_action(next_stage='idle_start', credit_change=-30)
+                if st.button("남의 PC방 슬쩍 구경하기", key="orphan_game"): process_action(next_stage='game_start', credit_change=-25)
+
         elif st.session_state.stage == 'main':
-            # 메인 화면에서도 일정 확률로 엄마가 터져서 즉사하는 기믹 추가 (30% 확률)
+            # 메인 화면에서도 30% 확률로 엄마 터짐 기믹 유지 (고아로 전락)
             if random.random() < 0.30:
-                die("평화롭게 서 있는데 갑자기 엄마가 펑 하고 터져서 같이 날아갔습니다!", "이유 없는 엄마 폭발")
+                st.session_state.is_orphan = True
+                st.session_state.social_credit -= 200
+                st.session_state.stage = 'orphan_main'
                 st.rerun()
 
             if st.session_state.mom_type == 'rich':
