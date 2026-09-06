@@ -35,6 +35,8 @@ def win(message, title):
 
 def process_action(next_stage=None, fatal=False, fatal_reason="", fatal_title="", is_ending=False, win_msg="", win_title=""):
     other_sudden_deaths = [
+        ("사망 메시지가 맞춤법을 틀려서 주것씁이다!!", "세종대왕 극대노"),
+        ("방금 나타난 사망 메시지가 오타가 나서 죽었습니다!", "버그 갓겜"),
         ("놀라서 뒤1졌습니다!", "진성 개복치"),
     ]
     
@@ -153,14 +155,15 @@ with st.container():
             st.write("김탁곤드레밥이 세상에 나오려 합니다. 어떻게 하시겠습니까?")
             
             if st.button("힘차게 태어나기", key="btn_birth_1"):
-                if random.random() < 0.05:  
+                # 태어날 때 15% 확률로 즉사 기믹 추가
+                if random.random() < 0.15:  
                     death_type = random.randint(1, 3)
                     if death_type == 1:
-                        die("태어나서 죽었습니다!", "초광속 스피드런")
+                        die("태어나자마자 숨쉬기를 까먹고 죽었습니다!", "초광속 스피드런")
                     elif death_type == 2:
-                        die("입양당해서 죽었습니다!", "가혹한 운명")
+                        die("출생 신고 도중 병원이 폭발해 죽었습니다!", "가혹한 운명")
                     else:
-                        die("태어났는데 공산당이 잡아갔습니다!", "체포조 출동")
+                        die("태어났는데 공산당 체포조가 바로 들이닥쳤습니다!", "체포조 출동")
                 else:
                     st.session_state.mom_type = 'normal'
                     st.session_state.stage = 'main'
@@ -172,23 +175,24 @@ with st.container():
         elif st.session_state.stage == 'mom_select':
             st.subheader("새로운 엄마를 스카우트하러 갑니다. 누구를 고르시겠습니까?")
             
-            if st.button("재벌가 마라탕집 사장님 엄마", key="btn_mom_choice_1"):
-                st.session_state.mom_type = 'exploded' if random.random() < 0.15 else 'rich'
-                st.session_state.stage = 'main'
-                st.rerun()
-            if st.button("무술 고수 대륙의 어머니", key="btn_mom_choice_2"):
-                st.session_state.mom_type = 'exploded' if random.random() < 0.15 else 'fighter'
-                st.session_state.stage = 'main'
-                st.rerun()
-            if st.button("평범하고 인자한 시골 어머니", key="btn_mom_choice_3"):
-                st.session_state.mom_type = 'exploded' if random.random() < 0.15 else 'gentle'
-                st.session_state.stage = 'main'
+            def handle_mom_selection(mom_key):
+                # 엄마 고를 때도 일정 확률로 억까 사망 (폭발 또는 출생 사고)
+                if random.random() < 0.15:
+                    die("엄마를 고르다가 선택 장애로 뇌가 타버려 사망했습니다!", "선택 장애의 최후")
+                else:
+                    st.session_state.mom_type = mom_key
+                    st.session_state.stage = 'main'
                 st.rerun()
 
+            if st.button("재벌가 마라탕집 사장님 엄마", key="btn_mom_choice_1"):
+                handle_mom_selection('rich')
+            if st.button("무술 고수 대륙의 어머니", key="btn_mom_choice_2"):
+                handle_mom_selection('fighter')
+            if st.button("평범하고 인자한 시골 어머니", key="btn_mom_choice_3"):
+                handle_mom_selection('gentle')
+
         elif st.session_state.stage == 'main':
-            if st.session_state.mom_type == 'exploded':
-                st.error("💥 엄마가 선택 도중 과열되어 쾅 터져버렸습니다! **[무소속 고아 상태]**로 생성되었습니다.")
-            elif st.session_state.mom_type == 'rich':
+            if st.session_state.mom_type == 'rich':
                 st.success("💰 재벌가 엄마 버프 발동: 든든한 자본 속에서 무난하게 시작합니다.")
             elif st.session_state.mom_type == 'fighter':
                 st.success("🥋 무술가 엄마 버프 발동: 험난한 대륙에서 버티는 힘이 솟아납니다.")
