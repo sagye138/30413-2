@@ -35,8 +35,6 @@ def win(message, title):
 
 def process_action(next_stage=None, fatal=False, fatal_reason="", fatal_title="", is_ending=False, win_msg="", win_title=""):
     other_sudden_deaths = [
-        ("사망 메시지가 맞춤법을 틀려서 주것씁이다!!", "세종대왕 극대노"),
-        ("방금 나타난 사망 메시지가 오타가 나서 죽었습니다!", "버그 갓겜"),
         ("놀라서 뒤1졌습니다!", "진성 개복치"),
     ]
     
