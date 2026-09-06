@@ -215,7 +215,7 @@ with st.container():
                 handle_mom_selection('gentle')
 
         elif st.session_state.stage == 'orphan_main':
-            st.error("💥 [속보] 엄마가 펑 터져버려서 졸지에 길거리 한복판에 홀로 남겨진 고아가 되었습니다!")
+            st.error("💥 [속보] 엄마가 선택 도중 과열되어 쾅 터져버렸습니다! **[무소속 고아 상태]**로 생성되었습니다.")
             st.warning("⚠️ 엄마의 보호가 없어 모든 행동의 난이도와 페널티가 2배로 증가합니다! 살아남으려면 악으로 깡으로 버텨야 합니다.")
             
             col1, col2 = st.columns(2)
