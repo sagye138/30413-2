@@ -210,21 +210,21 @@ with placeholder.container():
         elif st.session_state.stage == 'mom_select':
             st.subheader("새로운 엄마를 스카우트하러 갑니다. 누구를 고르시겠습니까?")
             
-            def handle_mom_choice(m_type):
+            if st.button("재벌가 마라탕집 사장님 엄마", key="btn_mom_choice_1"):
                 st.session_state.last_click_time = time.time()
-                if random.random() < 0.15:
-                    st.session_state.mom_type = 'exploded'
-                else:
-                    st.session_state.mom_type = m_type
+                st.session_state.mom_type = 'exploded' if random.random() < 0.15 else 'rich'
                 st.session_state.stage = 'main'
                 st.rerun()
-
-            if st.button("재벌가 마라탕집 사장님 엄마", key="btn_mom_1"):
-                handle_mom_choice('rich')
-            if st.button("무술 고수 대륙의 어머니", key="btn_mom_2"):
-                handle_mom_choice('fighter')
-            if st.button("평범하고 인자한 시골 어머니", key="btn_mom_3"):
-                handle_mom_choice('gentle')
+            if st.button("무술 고수 대륙의 어머니", key="btn_mom_choice_2"):
+                st.session_state.last_click_time = time.time()
+                st.session_state.mom_type = 'exploded' if random.random() < 0.15 else 'fighter'
+                st.session_state.stage = 'main'
+                st.rerun()
+            if st.button("평범하고 인자한 시골 어머니", key="btn_mom_choice_3"):
+                st.session_state.last_click_time = time.time()
+                st.session_state.mom_type = 'exploded' if random.random() < 0.15 else 'gentle'
+                st.session_state.stage = 'main'
+                st.rerun()
 
         # 메인 메뉴
         elif st.session_state.stage == 'main':
@@ -241,13 +241,13 @@ with placeholder.container():
             
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("밥 먹으러 가기", key="main_btn_1"): process_action(next_stage='eat_start')
-                if st.button("대륙의 얼 표출하기", key="main_btn_2"): process_action(next_stage='chinese_start')
-                if st.button("취업 전선 뛰어들기", key="main_btn_3"): process_action(next_stage='job_start')
+                if st.button("밥 먹으러 가기", key="main_btn_eat"): process_action(next_stage='eat_start')
+                if st.button("대륙의 얼 표출하기", key="main_btn_china"): process_action(next_stage='chinese_start')
+                if st.button("취업 전선 뛰어들기", key="main_btn_job"): process_action(next_stage='job_start')
             with col2:
-                if st.button("집 밖으로 외출하기", key="main_btn_4"): process_action(next_stage='out_start')
-                if st.button("방구석에서 잉여짓 하기", key="main_btn_5"): process_action(next_stage='idle_start')
-                if st.button("PC방 가서 게임하기", key="main_btn_6"): process_action(next_stage='game_start')
+                if st.button("집 밖으로 외출하기", key="main_btn_out"): process_action(next_stage='out_start')
+                if st.button("방구석에서 잉여짓 하기", key="main_btn_idle"): process_action(next_stage='idle_start')
+                if st.button("PC방 가서 게임하기", key="main_btn_game"): process_action(next_stage='game_start')
 
         # 루트들
         elif st.session_state.stage == 'eat_start':
