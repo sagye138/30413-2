@@ -51,7 +51,7 @@ def process_action(next_stage=None, fatal=False, fatal_reason="", fatal_title=""
             return
 
     if fatal:
-        pass  # 이미 die 호출됨
+        pass  
     elif is_ending:
         win(win_msg, win_title)
     elif next_stage and st.session_state.alive:
@@ -142,7 +142,6 @@ with st.container():
     st.markdown('<div class="game-container">', unsafe_allow_html=True)
     st.title("김탁곤드레밥 생존기")
     
-    # 생존 및 엔딩 상태가 아닐 때만 사회 신용 점수 표시
     if st.session_state.alive and not st.session_state.ending and st.session_state.stage != 'birth':
         st.markdown(f'<div class="credit-box">⭐ 현재 사회 신용 점수: {st.session_state.social_credit}점</div>', unsafe_allow_html=True)
     elif not st.session_state.alive:
@@ -174,16 +173,19 @@ with st.container():
             st.write("김탁곤드레밥이 세상에 나오려 합니다. 어떻게 하시겠습니까?")
             
             if st.button("힘차게 태어나기", key="btn_birth_1"):
-                if random.random() < 0.15:  
-                    death_type = random.randint(1, 3)
+                # 태어날 때 즉사 확률을 50%로 대폭 상향
+                if random.random() < 0.50:  
+                    death_type = random.randint(1, 4)
                     if death_type == 1:
-                        die("태어나자마자 숨쉬기를 까먹고 죽었습니다!", "초광속 스피드런")
+                        die("태어나자마자 엄마 배 속에서 자폭 버튼이 눌려 산산조각 났습니다!", "모태 폭발사고")
                     elif death_type == 2:
-                        die("출생 신고 도중 병원이 폭발해 죽었습니다!", "가혹한 운명")
+                        die("출생 신고 도중 산부인과 전체가 핵폭발처럼 날아갔습니다!", "산부인과 증발")
+                    elif death_type == 3:
+                        die("태어나자마자 공산당 체포조가 마중 나와서 유아 독존 폭살당했습니다!", "영유아 숙청")
                     else:
-                        die("태어났는데 공산당 체포조가 바로 들이닥쳤습니다!", "체포조 출동")
+                        die("응애 하고 숨을 들이쉬는 순간 엄마가 품고 있던 사제 폭탄이 터졌습니다!", "폭탄 안고 태어나기")
                 else:
-                    st.session_state.mom_type = 'normal'
+                    st.session_state.mom_type = 'exploded'  # 엄마가 터지는 기믹용 타입 지정
                     st.session_state.social_credit = 500
                     st.session_state.stage = 'main'
                 st.rerun()
@@ -195,29 +197,35 @@ with st.container():
             st.subheader("새로운 엄마를 스카우트하러 갑니다. 누구를 고르시겠습니까?")
             
             def handle_mom_selection(mom_key):
-                if random.random() < 0.15:
-                    die("엄마를 고르다가 선택 장애로 뇌가 타버려 사망했습니다!", "선택 장애의 최후")
+                # 엄마 고를 때도 50% 확률로 즉사 (폭발)
+                if random.random() < 0.50:
+                    die("엄마를 고르는 순간 선택한 엄마가 불꽃과 함께 장렬히 산화했습니다!", "엄마 동반 자폭")
                 else:
                     st.session_state.mom_type = mom_key
                     st.session_state.stage = 'main'
                 st.rerun()
 
-            if st.button("재벌가 마라탕집 사장님 엄마", key="btn_mom_choice_1"):
+            if st.button("재벌가 마라탕집 사장님 엄마 (폭발 위험 상시 대기)", key="btn_mom_choice_1"):
                 handle_mom_selection('rich')
-            if st.button("무술 고수 대륙의 어머니", key="btn_mom_choice_2"):
+            if st.button("무술 고수 대륙의 어머니 (기합 넣다 터짐)", key="btn_mom_choice_2"):
                 handle_mom_selection('fighter')
-            if st.button("평범하고 인자한 시골 어머니", key="btn_mom_choice_3"):
+            if st.button("평범하고 인자한 시골 어머니 (시골 가스통 폭발)", key="btn_mom_choice_3"):
                 handle_mom_selection('gentle')
 
         elif st.session_state.stage == 'main':
+            # 메인 화면에서도 일정 확률로 엄마가 터져서 즉사하는 기믹 추가 (30% 확률)
+            if random.random() < 0.30:
+                die("평화롭게 서 있는데 갑자기 엄마가 펑 하고 터져서 같이 날아갔습니다!", "이유 없는 엄마 폭발")
+                st.rerun()
+
             if st.session_state.mom_type == 'rich':
-                st.success("💰 재벌가 엄마 버프 발동: 든든한 자본 속에서 무난하게 시작합니다.")
+                st.success("💰 재벌가 엄마 버프 발동: 든든한 자본 속에서 언제 터질지 모르는 긴장감을 즐깁니다.")
             elif st.session_state.mom_type == 'fighter':
-                st.success("🥋 무술가 엄마 버프 발동: 험난한 대륙에서 버티는 힘이 솟아납니다.")
+                st.success("🥋 무술가 엄마 버프 발동: 언제 기합으로 터질지 모릅니다.")
             elif st.session_state.mom_type == 'gentle':
-                st.info("🍵 시골 엄마 버프 발동: 평온한 멘탈을 유지합니다.")
+                st.info("🍵 시골 엄마 버프 발동: 평온하지만 가스통은 조심해야 합니다.")
             else:
-                st.success("기적적으로 숨을 쉬고 있습니다! 무엇을 할까요?")
+                st.success("기적적으로 살아남아 숨을 쉬고 있습니다! 무엇을 할까요?")
             
             col1, col2 = st.columns(2)
             with col1:
