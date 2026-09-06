@@ -183,6 +183,7 @@ with st.container():
                     st.session_state.social_credit = 200  # 신용점수 대폭 깎임
                     st.session_state.stage = 'orphan_main'
                 else:
+                    st.session_state.is_orphan = False
                     st.session_state.mom_type = 'normal'
                     st.session_state.social_credit = 500
                     st.session_state.stage = 'main'
@@ -201,6 +202,7 @@ with st.container():
                     st.session_state.social_credit = 150
                     st.session_state.stage = 'orphan_main'
                 else:
+                    st.session_state.is_orphan = False
                     st.session_state.mom_type = mom_key
                     st.session_state.stage = 'main'
                 st.rerun()
