@@ -15,7 +15,7 @@ if 'alive' not in st.session_state:
     st.session_state.status_img = ""
     st.session_state.last_click_time = time.time()
     st.session_state.effect_key = 0
-    st.session_state.mom_type = None  # 엄마 특성 저장
+    st.session_state.mom_type = None
 
 def reset_game():
     st.session_state.alive = True
@@ -31,8 +31,8 @@ def reset_game():
 def die(reason, title):
     st.session_state.alive = False
     st.session_state.ending = False
-    st.session_state.death_message = reason  # status_message를 death_message로 통일
-    st.session_state.death_title = title     # status_title을 death_title로 통일
+    st.session_state.status_message = reason
+    st.session_state.status_title = title
     
     china_memes = [
         "https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWE1ZDF4NWQ2MXVnMG1tMW50MWJzZjB2a3R2MW5xZmR1dG12aHVjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9rjKL78w9wY8uGzC1t/giphy.gif",
@@ -50,17 +50,22 @@ def win(message, title):
     st.session_state.status_title = title
     st.session_state.status_img = "https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmtpZjRzeXk1dnFod3c1czl2OHUxeGgzMW4wNmZsb2V2czE0ZnM2bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/d31w24psGYeekCXY/giphy.gif"
 
-def check_time_based_death():
+# --- 가만히 있을 때(시간 경과) 사망 체크 로직 ---
+def check_idle_death():
+    if not st.session_state.alive or st.session_state.ending:
+        return False
+        
     current_time = time.time()
     elapsed_seconds = int(current_time - st.session_state.last_click_time)
-    st.session_state.last_click_time = current_time
     
     if elapsed_seconds > 0:
+        # 초당 1% 누적 확률 (0.01씩 증가, 10초 지나면 약 9.5% 누적 사망 확률)
         death_probability = 1.0 - (0.99 ** elapsed_seconds)
         if random.random() < death_probability:
             reasons = [
-                ("아무것도 안해서 뒤1졌습니다!", "무소유의 최후"),
-                ("그냥 뒤졌습니다!", "이유 없는 반항")
+                ("아무것도 안하고 가만히 숨만 쉬다가 뒤1졌습니다!", "무소유의 최후"),
+                ("생각을 너무 오래 하다가 뇌가 굳어서 사망했습니다!", "생각 정지"),
+                ("멍 때리다가 공안에게 간첩으로 오인받아 끌려갔습니다!", "멍 때리기 죄")
             ]
             reason, title = random.choice(reasons)
             die(reason, title)
@@ -69,16 +74,14 @@ def check_time_based_death():
 
 def do_action(next_stage=None, fatal=False, fatal_reason="", fatal_title="", is_ending=False, win_msg="", win_title=""):
     st.session_state.effect_key += 1
-    if check_time_based_death():
-        return
+    st.session_state.last_click_time = time.time()  # 행동할 때마다 타이머 리셋
         
     other_sudden_deaths = [
-        ("사망 매시지가 마춤뻡을 틀려서 주것씁이다!!", "세종대왕 극대노"),
+        ("사망 메시지가 맞춤법을 틀려서 주것씁이다!!", "세종대왕 극대노"),
         ("방금 나타난 사망 메시지가 오타가 나서 죽었습니다!", "버그 갓겜"),
         ("놀라서 뒤1졌습니다!", "진성 개복치"),
     ]
     
-    # 엄마가 '터진(없음)' 상태라면 사망 확률이 조금 더 높음 (패널티)
     random_death_rate = 0.08 if st.session_state.mom_type == 'exploded' else 0.05
     if not fatal and not is_ending and random.random() < random_death_rate:
         r, t = random.choice(other_sudden_deaths)
@@ -173,16 +176,20 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
+# --- 매 루프마다 가만히 있는 시간 체크 후 사망했으면 즉시 리런 트리거 ---
+if check_idle_death():
+    st.rerun()
+
 # --- 게임 화면 구성 ---
 st.markdown(f'<div class="flash-container" key="{st.session_state.effect_key}">', unsafe_allow_html=True)
 
 st.title("김탁곤드레밥 생존기")
-st.markdown("⚠️ **주의:** 선택을 너무 오래 고민하면 아무것도 안해서 뒤집니다! (1초당 사망 확률 1% 누적)")
+st.markdown("⚠️ **주의:** 아무 버튼도 안 누르고 가만히 있으면 초당 1% 확률로 누적 사망합니다!")
 st.markdown("---")
 
 if not st.session_state.alive:
-    st.error(f"## [{st.session_state.death_title}]")
-    st.header(f"사인: {st.session_state.death_message}")
+    st.error(f"## [{st.session_state.status_title}]")
+    st.header(f"사인: {st.session_state.status_message}")
     st.image(st.session_state.status_img, use_container_width=True)
     st.markdown("---")
     st.button("다시 환생하기", on_click=reset_game)
@@ -196,7 +203,7 @@ elif st.session_state.ending:
     st.button("처음부터 다시하기", on_click=reset_game)
 
 else:
-    # 1. 탄생 단계 (사망 확률 5%로 하향)
+    # 1. 탄생 단계 (5% 확률 사망)
     if st.session_state.stage == 'birth':
         st.subheader("응애! 생명의 탄생")
         st.write("김탁곤드레밥이 세상에 나오려 합니다. 어떻게 하시겠습니까?")
@@ -204,7 +211,7 @@ else:
         def do_birth():
             st.session_state.last_click_time = time.time()
             st.session_state.effect_key += 1
-            if random.random() < 0.05:  # 5% 확률로 조정
+            if random.random() < 0.05:  
                 death_type = random.randint(1, 3)
                 if death_type == 1:
                     die("태어나서 죽었습니다!", "초광속 스피드런")
@@ -219,9 +226,7 @@ else:
         st.button("힘차게 태어나기", on_click=do_birth)
         st.button("엄마가 마음에 들지 않는다", on_click=do_action, args=('mom_select',))
 
-    # ==========================================
-    # [신규] 엄마 고르기 / 엄마 폭발 이벤트
-    # ==========================================
+    # 엄마 고르기 / 엄마 폭발 이벤트
     elif st.session_state.stage == 'mom_select':
         st.subheader("새로운 엄마를 스카우트하러 갑니다. 누구를 고르시겠습니까?")
         
@@ -241,9 +246,7 @@ else:
         st.button("무술 고수 대륙의 어머니 (이익: 위기 탈출 능력 상승, 디버프: 매일 아침 훈장으로 기합 받음)", on_click=select_mom, args=('fighter',))
         st.button("평범하고 인자한 시골 어머니 (이익: 마음의 평온, 디버프: 잔소리가 너무 심해 귀가 썩음)", on_click=select_mom, args=('gentle',))
 
-    # ==========================================
     # 메인 메뉴
-    # ==========================================
     elif st.session_state.stage == 'main':
         if st.session_state.mom_type == 'exploded':
             st.error("💥 엄마가 선택 도중 과열되어 쾅 터져버렸습니다! **[무소속 고아 상태]**로 생성되었습니다. (돌봐주는 이가 없어 수시로 억까 위험 증가!)")
@@ -266,9 +269,7 @@ else:
             st.button("방구석에서 잉여짓 하기", on_click=do_action, args=('idle_start',))
             st.button("PC방 가서 게임하기", on_click=do_action, args=('game_start',))
 
-    # ==========================================
-    # 루트 1~6 (기존 유지)
-    # ==========================================
+    # 루트들
     elif st.session_state.stage == 'eat_start':
         st.subheader("밥을 먹기로 결심했습니다. 어디로 갈까요?")
         st.button("마라탕 골목으로 간다", on_click=do_action, args=('eat_walk',))
@@ -337,7 +338,7 @@ else:
         st.subheader("장바구니에 폭탄 세일 물품들이 가득합니다. 무엇을 결제할까요?")
         st.button("리뷰 1만개 평점 5.0 정상적인 이불 구매", on_click=do_action, args=(None, False, "", "", True, "푹신한 이불 속에서 귤을 까먹으며 신선처럼 영생을 누렸습니다!", "엔딩 5: 방구석 신선"))
         st.button("초특가 990원 대용량 보조배터리", on_click=do_action, args=(None, True, "택배를 뜯자마자 배터리가 폭발해서 그냥 뒤졌습니다!", "이유 없는 반항"))
-        st.button("리뷰 0개짜리 정체불명 명품 티셔츠", on_click=do_action, args=(None, True, "사망 매시지가 마춤뻡을 틀려서 주것씁이다!!", "세종대왕 극대노"))
+        st.button("리뷰 0개짜리 정체불명 명품 티셔츠", on_click=do_action, args=(None, True, "사망 메시지가 맞춤법을 틀려서 주것씁이다!!", "세종대왕 극대노"))
 
     elif st.session_state.stage == 'job_start':
         st.subheader("통장 잔고가 0원입니다. 일자리를 구해야 합니다.")
@@ -374,3 +375,8 @@ else:
         st.button("옆자리 아저씨에게 화면을 보여주며 자랑한다", on_click=do_action, args=(None, True, "폭사한 옆자리 아저씨가 질투에 눈이 멀어 휘두른 키보드에 맞아 죽었습니다!", "질투의 화신"))
 
 st.markdown('</div>', unsafe_allow_html=True)
+
+# ⏳ 사용자가 가만히 있을 때 브라우저가 주기적으로 타이머를 확인하도록 백그라운드 리런 트리거 (매초 갱신)
+if st.session_state.alive and not st.session_state.ending:
+    time.sleep(1)
+    st.rerun()
